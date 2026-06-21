@@ -62,8 +62,6 @@ When you run Linux inside a containerized environment, the host operating system
 2. However, the security overlay (like `lxcfs` or Docker's AppArmor profiles) actively hides the `uid_map` and `gid_map` files to prevent nested privilege escalation.
 3. The files literally do not exist in your virtualized view of `/proc`, causing `fopen` to throw `ENOENT` (No such file or directory).
 
-**Note:** `For Everyone's acees to complete the all the stages we will skip this part in upcoming stage`
-
 ---
 
 

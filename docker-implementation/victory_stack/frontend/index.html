@@ -1,0 +1,199 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MyDocker Mission Control</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        /* Custom scrollbar for the terminal window */
+        ::-webkit-scrollbar { width: 8px; }
+        ::-webkit-scrollbar-track { background: #1e293b; }
+        ::-webkit-scrollbar-thumb { background: #475569; border-radius: 4px; }
+        ::-webkit-scrollbar-thumb:hover { background: #64748b; }
+        .terminal-glow { box-shadow: 0 0 15px rgba(56, 189, 248, 0.1); }
+    </style>
+</head>
+<body class="bg-slate-950 text-slate-300 font-sans min-h-screen p-6">
+    
+    <div class="max-w-6xl mx-auto">
+        <header class="flex items-center justify-between border-b border-slate-800 pb-6 mb-8">
+            <div class="flex items-center gap-4">
+                <div class="bg-blue-600/20 text-blue-500 p-3 rounded-lg">
+                    <i class="fa-solid fa-dharmachakra text-2xl"></i>
+                </div>
+                <div>
+                    <h1 class="text-3xl font-extrabold text-slate-100 tracking-tight">MyDocker <span class="text-blue-500">Engine</span></h1>
+                    <p class="text-sm text-slate-500 mt-1">C-Based Container Orchestration System</p>
+                </div>
+            </div>
+            <div id="connection-status" class="flex items-center gap-2 bg-slate-900 border border-slate-800 px-4 py-2 rounded-full shadow-sm">
+                <div class="w-2.5 h-2.5 rounded-full bg-yellow-500 animate-pulse" id="status-dot"></div>
+                <span class="text-sm font-medium text-slate-400" id="status-text">Connecting to Container...</span>
+            </div>
+        </header>
+
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+            
+            <div class="lg:col-span-1 space-y-6">
+                <div class="bg-slate-900 border border-slate-800 rounded-xl p-6 terminal-glow">
+                    <h2 class="text-lg font-semibold text-slate-100 mb-4 border-b border-slate-800 pb-2">
+                        <i class="fa-solid fa-server mr-2 text-blue-400"></i> Container Namespaces
+                    </h2>
+                    <ul class="space-y-4" id="stats-list">
+                        <li class="flex justify-between items-center text-sm">
+                            <span class="text-slate-500">Hostname</span>
+                            <span class="font-mono text-emerald-400 bg-emerald-400/10 px-2 py-1 rounded" id="stat-hostname">loading...</span>
+                        </li>
+                        <li class="flex justify-between items-center text-sm">
+                            <span class="text-slate-500">Networking</span>
+                            <span class="font-mono text-sky-400" id="stat-net">loading...</span>
+                        </li>
+                        <li class="flex justify-between items-center text-sm">
+                            <span class="text-slate-500">Storage</span>
+                            <span class="font-mono text-purple-400" id="stat-storage">loading...</span>
+                        </li>
+                        <li class="flex justify-between items-center text-sm">
+                            <span class="text-slate-500">Python Env</span>
+                            <span class="font-mono text-yellow-400" id="stat-python">loading...</span>
+                        </li>
+                    </ul>
+                </div>
+
+                <div class="bg-slate-900 border border-slate-800 rounded-xl p-6">
+                    <h2 class="text-lg font-semibold text-slate-100 mb-4 border-b border-slate-800 pb-2">
+                        <i class="fa-solid fa-database mr-2 text-purple-400"></i> Persistent Volume Test
+                    </h2>
+                    <p class="text-xs text-slate-500 mb-4">Data entered here is saved to <code class="text-slate-400">/db/data.db</code> mounted via host bind-mounts.</p>
+                    
+                    <div class="space-y-3">
+                        <select id="logLevel" class="w-full bg-slate-950 border border-slate-800 rounded-lg px-4 py-2.5 text-sm focus:outline-none focus:border-blue-500 text-slate-300">
+                            <option value="INFO">INFO - System Update</option>
+                            <option value="WARN">WARN - Resource Warning</option>
+                            <option value="ERROR">ERROR - Critical Failure</option>
+                        </select>
+                        <input type="text" id="logInput" placeholder="Enter log payload..." class="w-full bg-slate-950 border border-slate-800 rounded-lg px-4 py-2.5 text-sm focus:outline-none focus:border-blue-500 text-slate-300 transition-colors" onkeypress="handleKeyPress(event)">
+                        <button onclick="sendLog()" class="w-full bg-blue-600 hover:bg-blue-500 text-white font-medium py-2.5 rounded-lg transition-colors shadow-lg shadow-blue-500/20">
+                            Write to Disk
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="lg:col-span-2">
+                <div class="bg-[#0f172a] border border-slate-800 rounded-xl flex flex-col h-[600px] shadow-2xl relative overflow-hidden">
+                    <div class="bg-slate-900 border-b border-slate-800 px-4 py-3 flex items-center gap-2">
+                        <div class="flex gap-1.5">
+                            <div class="w-3 h-3 rounded-full bg-red-500/80"></div>
+                            <div class="w-3 h-3 rounded-full bg-yellow-500/80"></div>
+                            <div class="w-3 h-3 rounded-full bg-green-500/80"></div>
+                        </div>
+                        <div class="mx-auto text-xs font-mono text-slate-500 flex items-center gap-2">
+                            <i class="fa-solid fa-lock text-[10px]"></i> /db/data.db — container@rootfs
+                        </div>
+                    </div>
+                    
+                    <div class="p-4 flex-1 overflow-y-auto font-mono text-sm" id="terminal-output">
+                        </div>
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+    <script>
+        const API_URL = "http://localhost:8000/api";
+
+        function getColorForLevel(level) {
+            switch(level) {
+                case 'ERROR': return 'text-red-400';
+                case 'WARN': return 'text-yellow-400';
+                case 'INFO': return 'text-blue-400';
+                default: return 'text-slate-400';
+            }
+        }
+
+        async function fetchStatus() {
+            try {
+                const res = await fetch(`${API_URL}/status`);
+                if(res.ok) {
+                    const data = await res.json();
+                    
+                    // Update connection badge
+                    document.getElementById('status-dot').className = "w-2.5 h-2.5 rounded-full bg-green-500 shadow-[0_0_8px_rgba(34,197,94,0.6)]";
+                    document.getElementById('status-text').textContent = "Network Bridge Connected";
+                    document.getElementById('status-text').className = "text-sm font-medium text-green-400";
+
+                    // Populate Stats
+                    document.getElementById('stat-hostname').textContent = data.container_hostname;
+                    document.getElementById('stat-net').textContent = data.networking;
+                    document.getElementById('stat-storage').textContent = data.storage;
+                    document.getElementById('stat-python').textContent = `v${data.python_version}`;
+                }
+            } catch (e) {
+                document.getElementById('status-dot').className = "w-2.5 h-2.5 rounded-full bg-red-500";
+                document.getElementById('status-text').textContent = "Connection Refused";
+                document.getElementById('status-text').className = "text-sm font-medium text-red-400";
+            }
+        }
+
+        async function fetchLogs() {
+            try {
+                const res = await fetch(`${API_URL}/logs`);
+                const logs = await res.json();
+                const container = document.getElementById('terminal-output');
+                
+                if (logs.length === 0) {
+                    container.innerHTML = `<div class="text-slate-600 mt-2">Waiting for file IO on mounted volume...</div>`;
+                    return;
+                }
+
+                container.innerHTML = logs.map(log => `
+                    <div class="mb-2 flex gap-3 hover:bg-slate-800/50 p-1 rounded transition-colors group">
+                        <span class="text-slate-600 select-none">[${log.timestamp}]</span>
+                        <span class="font-bold w-12 ${getColorForLevel(log.level)}">${log.level}</span>
+                        <span class="text-slate-300 group-hover:text-white transition-colors">${log.content}</span>
+                    </div>
+                `).join('');
+            } catch (e) {
+                console.error("Failed to fetch logs");
+            }
+        }
+
+        async function sendLog() {
+            const input = document.getElementById('logInput');
+            const level = document.getElementById('logLevel');
+            
+            if(!input.value) return;
+            
+            try {
+                await fetch(`${API_URL}/logs`, {
+                    method: "POST",
+                    headers: {"Content-Type": "application/json"},
+                    body: JSON.stringify({
+                        content: input.value,
+                        level: level.value
+                    })
+                });
+                
+                input.value = '';
+                fetchLogs(); // refresh the terminal window
+            } catch(e) {
+                alert("Failed to write to container volume.");
+            }
+        }
+
+        function handleKeyPress(e) {
+            if (e.key === 'Enter') sendLog();
+        }
+
+        // Initialization
+        fetchStatus();
+        fetchLogs();
+        // Poll for updates every 3 seconds
+        setInterval(fetchLogs, 3000);
+        setInterval(fetchStatus, 5000);
+    </script>
+</body>
+</html>
