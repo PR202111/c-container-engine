@@ -1,5 +1,5 @@
 
-# custom_docker — minimal container engine learning repo
+# custom-docker — minimal container engine learning repo
 
 This repository is a step-by-step implementation of a minimal container engine (a tiny Docker-like project) written in C. It walks through the low-level building blocks of Linux containers and culminates in a small compose-like orchestrator that can launch a simple demo "victory_stack".
 
